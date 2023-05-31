@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+  <!--
+    WARNING! Make sure that you match all Quasar related
+    tags to the same version! (Below it's "@2.11.7")
+  -->
+  <head>
+    <meta charset="UTF-8">
+    <title>Formulario de contratación</title>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons" rel="stylesheet" type="text/css">
+    <link href="https://cdn.jsdelivr.net/npm/quasar@2.11.7/dist/quasar.prod.css" rel="stylesheet" type="text/css">
+    <!-- Para realizar peticiones a las apis AXIOS -->
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  </head>
+
+  <body>
+    <!-- Etiqueta contenedora de quasar -->
+    <div id="q-app">
+        <div class="row">
+            
+            <div class="col-xs-1 col-md-4"></div>
+            <div class="col-xs-10 col-md-4">
+                <div class="row">
+
+                    <div class="col-12  q-mt-md">
+                        <q-select v-model="idProducto" :options="productos"  option-value="id" option-label="name" label="Elige un producto" emit-value map-options></q-select>                  
+                    </div>
+                    <div v-if="idProducto!=null" class="row">
+                        <div class="col-12 text-center">
+                            <h4>Reserva tu cita en 4 pasos</h4>
+                        </div>
+    
+                        <div class="col-12">
+                            <q-select v-model="ciudadSeleccionada" :options="ciudades" label="Elige área donde deseas reservar"></q-select>
+                        </div>
+    
+                        <div v-if="ciudadSeleccionada!=null" class="col-12  q-mt-md">
+                            <q-date style="width: 100%;" v-model="fechaSeleccionada" :options="diasDisponibles"></q-date>
+                        </div>
+    
+                        <div v-if="fechaSeleccionada!=null" class="col-12  q-mt-md">
+                            <q-select v-model="clinicaSeleccionada" :options="clinicasDisponibles"  option-value="id" option-label="name" label="Elige una clínica" emit-value map-options></q-select>                
+                        </div>
+    
+                        <div v-if="clinicaSeleccionada!=null" class="col-12  q-mt-md">
+                            <q-option-group v-model="bloqueSeleccionado" :options="bloquesDisponibles" color="primary" inline></q-option-group>                
+                        </div>
+    
+                        <div v-if="clinicaSeleccionada!=null && fechaSeleccionada!=null && bloqueSeleccionado!=null" class="col-12 q-mt-md">
+                            <q-card flat bordered class="my-card">
+                                <q-card-section>
+                                  <div class="text-h6">RESUMEN DE TU CITA</div>
+                                </q-card-section>
+                          
+                                <q-card-section class="q-pt-none">
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <strong>Tipo de test:</strong> Test PCR Urgente (70,00 €)
+                                        </div>
+                                        <div class="col-12">
+                                            <strong>Clínica:</strong> {{clinicaSeleccionada}}
+                                        </div>
+                                        <div class="col-12">
+                                            <strong>Fecha y hora:</strong> {{fechaSeleccionada}} - {{bloqueSeleccionado}}
+                                        </div>
+                                    </div>
+                                </q-card-section>
+    
+                              </q-card>
+                        </div>
+    
+                        <div class="col-12 q-mt-xl">
+                            <div class="row">
+                                <div class="col-1">
+                                    <q-icon name="calendar_month" size="35px"></q-icon>
+                                </div>
+                                <div class="col-11">
+                                    <p>CITA ON-LINE</h5>
+                                    <p>Los test de Democratest <strong>solo pueden contratarse on-line</strong>.
+                                        Los detalles de la <strong>clínica</strong> le será indicado al <strong>final del proceso</strong> de contratación.</p>
+                                </div>
+                            </div>
+                        </div>
+    
+                        <div class="col-12 q-mt-md">
+                            <div class="row">
+                                <div class="col-1">
+                                    <q-icon name="schedule" size="35px"></q-icon>
+                                </div>
+                                <div class="col-11">
+                                    <p>ACUDIR CON 5 MINUTOS DE ANTELACIÓN</h5>
+                                    <p>Para evitar aglomeraciones, se recomienda acudir a la cita con no más de 5 minutos de antelación.
+                                         <strong>No se admiten cambios en el mismo día de la cita</strong>, solo es posible la cancelación de la misma.
+                                        </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div v-if="clinicaSeleccionada!=null && fechaSeleccionada!=null && bloqueSeleccionado!=null" class="col-12 q-mt-md">
+                            <div class="q-mt-md" v-for="(data,index) of HTMLQuestions">
+                                <div v-if="data.idQuestionType == '1'">
+                                    <q-input v-model="HTMLQuestions[index].answerToSend" :label="data.question" />
+                                </div>
+                                <div v-if="data.idQuestionType == '2'">
+                                    <q-select :options="data.answers" v-model="HTMLQuestions[index].answerToSend" option-value="id" option-label="respuesta" :label="data.question" emit-value map-options></q-select>
+                                </div>
+                                <div v-if="data.idQuestionType == '3'">
+                                    {{data.question}}
+                                    <div class="q-gutter-md row items-start">
+                                        <q-date v-model="HTMLQuestions[index].answerToSend" />
+                                      </div>
+                                </div>
+                                <div v-if="data.idQuestionType == '4'">
+                                    <div class="q-pa-md">
+                                        {{data.question}}
+                                        <div v-for="(seconddata,newindex) of HTMLQuestions[index].answers" class="q-gutter-sm">
+                                          <q-radio v-model="HTMLQuestions[index].answerToSend" :val="seconddata.respuesta" :label="seconddata.respuesta" />
+                                        </div>
+                                    
+                                        <div class="q-px-sm">
+                                          Your selection is: <strong>{{ HTMLQuestions[index].answerToSend }}</strong>
+                                        </div>
+                                      </div>
+                                </div>
+                                <div v-if="data.idQuestionType == '5'">
+                                    <h4>{{data.question}}</h4>
+                                </div>
+                            </div>
+                            <q-btn color="primary" label="Enviar" v-on:click="onClickFinalButton" />
+                        </div>
+                    </div>
+                  </div>
+            </div>
+            <div class="col-xs-1 col-md-4"></div>
+        </div>     
+  </div>
+
+
+    <!-- Add the following at the end of your body tag -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/quasar@2.11.7/dist/quasar.umd.prod.js"></script>
+    <script></script>
+
+    <script src="app.js"></script>
+
+  </body>
+</html>
